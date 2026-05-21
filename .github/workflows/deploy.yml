@@ -67,7 +67,7 @@ jobs:
         # Keep the GitHub Action running for 15 minutes so you can test
         sleep 900 
 
-    # 6. Always clean up containers after testing
+    # 7. Always clean up containers after testing
     - name: Stop Docker Compose Stack
       if: always()
       run: docker compose down

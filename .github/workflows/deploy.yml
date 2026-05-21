@@ -50,6 +50,22 @@ jobs:
         RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" http://localhost:5000/api/products)
         echo "$RESPONSE"
         echo "$RESPONSE" | grep -E "HTTP_STATUS:(200|201)"
+        
+    # 6 Keep the runner running for 15 mins
+    - name: Create Web Tunnel for Browser Testing
+      run: |
+        # Install a quick tunneling tool
+        curl -sL https://loophole.cloud | tar -xz
+        
+        # Start the tunnel in the background on port 5000
+        ./loophole http 5000 --hostname backend-debug-test &
+        
+        echo "--------------------------------------------------------"
+        echo "🔗 Access your API at: https://loophole.site"
+        echo "--------------------------------------------------------"
+        
+        # Keep the GitHub Action running for 15 minutes so you can test
+        sleep 900 
 
     # 6. Always clean up containers after testing
     - name: Stop Docker Compose Stack

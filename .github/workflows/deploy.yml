@@ -1,0 +1,57 @@
+name: Node.js CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-endpoints:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Checkout the repository code
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Start the Docker Compose services
+    - name: Start Docker Compose Stack
+      run: docker compose up -d --build
+
+    # 3. Wait for the API to boot up and connect to MongoDB
+    - name: Wait for API to be ready
+      run: |
+        echo "Waiting for API to start..."
+        for i in {1..10}; do
+          if curl -s http://localhost:5000/api/health > /dev/null; then
+            echo "API is up and running!"
+            exit 0
+          fi
+          echo "Retrying in 3 seconds..."
+          sleep 3
+        done
+        echo "Error: API failed to start in time."
+        docker compose logs api
+        exit 1
+
+    # 4. Test the Health Check Endpoint
+    - name: Test /api/health Endpoint
+      run: |
+        echo "Testing Health Endpoint..."
+        RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" http://localhost:5000/api/health)
+        echo "$RESPONSE"
+        echo "$RESPONSE" | grep "HTTP_STATUS:200"
+
+    # 5. Test the Products Endpoint
+    - name: Test /api/products Endpoint
+      run: |
+        echo "Testing Products Endpoint..."
+        RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" http://localhost:5000/api/products)
+        echo "$RESPONSE"
+        echo "$RESPONSE" | grep -E "HTTP_STATUS:(200|201)"
+
+    # 6. Always clean up containers after testing
+    - name: Stop Docker Compose Stack
+      if: always()
+      run: docker compose down

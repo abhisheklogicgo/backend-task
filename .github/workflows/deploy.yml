@@ -50,30 +50,8 @@ jobs:
         RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" http://localhost:5000/api/products)
         echo "$RESPONSE"
         echo "$RESPONSE" | grep -E "HTTP_STATUS:(200|201)"
-        
-    # 6. Keep the runner running for 15 mins with a stable tunnel
-    - name: Create Web Tunnel for Browser Testing
-      run: |
-        # Install localtunnel safely using npm
-        sudo npm install -g localtunnel
-        
-        # Start the tunnel in the background on port 5000 with a custom subdomain
-        lt --port 5000 --subdomain backend-crud-debug-test &
-        
-        # Give the tunnel 5 seconds to establish its cloud network connection
-        sleep 5
-        
-        echo "--------------------------------------------------------"
-        echo "🔗 ACCESS YOUR API FROM YOUR BROWSER AT THESE LINKS:"
-        echo "👉 Health Check: https://loca.lt"
-        echo "👉 Products API: https://loca.lt"
-        echo "--------------------------------------------------------"
-        echo "The pipeline is now paused. You have 15 minutes to run your tests."
-        
-        # Keep the GitHub Action running for 15 minutes (900 seconds)
-        sleep 900 
 
-    # 7. Always clean up containers after testing
+    # 6. Always clean up containers after testing
     - name: Stop Docker Compose Stack
       if: always()
       run: docker compose down
